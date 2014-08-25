@@ -37,6 +37,6 @@ html: index.html
 
 clean:
 	$(MAKE) -C utf $@
-	$(RM) -f libutf++-$(VERSION).tar.gz
+	$(RM) -f libutf++-$(VERSION).tar.gz index.html
 
 .PHONY: all clean

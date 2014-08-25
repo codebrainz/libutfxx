@@ -32,12 +32,29 @@ Dependencies
 
 Not much, basically any relatively modern C++ compiler should do.
 
-To use the GNU Make build system requires:
+### C++11
+
+While not required, it is recommended to enable C++11-mode in the C++
+compiler, where supported. For GCC-like compilers the `-std=c++0x` or
+`-std=c++11` options should do this. Using C++11-mode allows use of Unicode
+string literals `u8""` (UTF-8), `u""` (UTF-16), and `U""` (UTF-32) as well as
+2 of the 3 proper character types needed by LibUTF++, `char16_t` and
+`char32_t`, with the old `char` type filling the place of the missing
+`char8_t` type.
+
+### Toy Build System
+
+To use the simplistic GNU Make build system requires:
 
 - GNU Make
 - A GCC-like C++ compiler
 - sed (to process `utf.cxx.in`)
 - Various other UNIX-like tools (cp, rm, etc)
+
+__Note:__ it is not recommended to use the GNU Make build system for anything
+more than generating the built files (namely `utf.cxx` and `index.html`). See
+"Using LibUTF++ in your Project" for more details on integrating LibUTF++
+into your own source tree.
 
 WTF are the ConvertUTF.[ch] files?
 ----------------------------------
@@ -213,6 +230,36 @@ to convert from UTF-16 to UTF-8 (exception handling not shown):
 
 The functions are overloaded to accept any of the UTF-8, UTF-16 or UTF-32
 string types defined in the `utf` namespace.
+
+### String Class
+
+LibUTF++ also provides a class in the `utfstring.h` header file that behaves
+like a `std::basic_string` by actually containing one and forwarding all the
+calls to it, performing conversions where needed. It should be pretty obvious
+how to use it if you've used `std::string` and friend before.
+
+There are 3 typedef's for the `utf::string` template class: `utf::u8string`,
+`utf::u16string` and `utf::u32string` for UTF-8, 16, and 32, respectively.
+Choose the flavour depending on how you want to trade off time and space.
+A `utf::u32string` will hold 32-bit code points and so take more memory, while
+a `utf::u8string` will hold 8-bit encoded data and so take more time doing
+conversions while being more space-efficient.
+
+Here's a little demo using `utf::string` with C++11:
+
+	#include <utfstring.h>
+	#include <iostream>
+	...
+	int main()
+	{
+		utf::u8string s1 = U"Some 32-bit string";  // UTF-32 -> UTF-8 conversion
+		utf::u16string s2 = u8"Some 8-bit string"; // UTF-8 -> UTF-16 conversion
+		utf::u32string s3;
+		s3 += s1; // UTF-8 to UTF-32 conversion
+		s3 += s2; // UTF-16 to UTF-32 conversion
+		std::cout << s3 << std::endl; // UTF-32 to UTF-8 (or other) conversion
+		return 0;
+	}
 
 Legal
 -----

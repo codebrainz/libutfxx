@@ -26,6 +26,8 @@
  */
 
 #include "utf.h"
+#include <cassert>
+#include <iostream>
 
 //////////////////////////////////////////////////////////////////////////////
 // ConvertUTF.h Header                                                      //
@@ -88,15 +90,25 @@ typedef ConversionResult (*Func32to16)(
 static const size_t buf_size = 32;
 static ConversionFlags conv_flags = strictConversion;
 
+template< typename T >
+static size_t measure_nulterm(const T* p)
+{
+	const T* iter = p;
+	size_t length = 0;
+	while (*iter++)
+		length++;
+	return length;
+}
+
 template< typename InCharT,
           typename OutCharT,
           typename FuncT,
           size_t   BufSize >
-void convert_(const std::basic_string<InCharT>& in, std::basic_string<OutCharT>& out, FuncT cvt_func)
+void convert_ptr_(const InCharT* in, size_t in_size, std::basic_string<OutCharT>& out, FuncT cvt_func)
 {
 	OutCharT buf[BufSize] = {0};
-	const InCharT* ss = in.c_str();
-	const InCharT* se = ss + in.size();
+	const InCharT* ss = in;
+	const InCharT* se = ss + in_size;
 	OutCharT* ts = &buf[0];
 	OutCharT* te = ts + BufSize;
 
@@ -121,9 +133,18 @@ void convert_(const std::basic_string<InCharT>& in, std::basic_string<OutCharT>&
 	}
 }
 
+template< typename InCharT,
+          typename OutCharT,
+          typename FuncT,
+          size_t   BufSize >
+void convert_(const std::basic_string<InCharT>& in, std::basic_string<OutCharT>& out, FuncT cvt_func)
+{
+	convert_ptr_<InCharT, OutCharT, FuncT, BufSize>(in.c_str(), in.size(), out, cvt_func);
+}
+
 void cvt_8_to_8(const string8& si, string8& so)
 {
-	std::copy(si.begin(), si.end(), so.begin());
+	so = si;
 }
 
 void cvt_8_to_16(const string8& si, string16& so)
@@ -136,6 +157,26 @@ void cvt_8_to_32(const string8& si, string32& so)
 	convert_<char8, char32, Func8to32, buf_size>(si, so, (Func8to32) ConvertUTF8toUTF32);
 }
 
+void cvt_8_to_8(const char8* si, string8& so)
+{
+	assert(si);
+	so = si;
+}
+
+void cvt_8_to_16(const char8* si, string16& so)
+{
+	assert(si);
+	convert_ptr_<char8, char16, Func8to16, buf_size>(
+		si, measure_nulterm(si), so, (Func8to16) ConvertUTF8toUTF16);
+}
+
+void cvt_8_to_32(const char8* si, string32& so)
+{
+	assert(si);
+	convert_ptr_<char8, char32, Func8to32, buf_size>(
+		si, measure_nulterm(si), so, (Func8to32) ConvertUTF8toUTF32);
+}
+
 void cvt_16_to_8(const string16& si, string8& so)
 {
 	convert_<char16, char8, Func16to8, buf_size>(si, so, (Func16to8) ConvertUTF16toUTF8);
@@ -143,12 +184,32 @@ void cvt_16_to_8(const string16& si, string8& so)
 
 void cvt_16_to_16(const string16& si, string16& so)
 {
-	std::copy(si.begin(), si.end(), so.begin());
+	so = si;
 }
 
 void cvt_16_to_32(const string16& si, string32& so)
 {
 	convert_<char16, char32, Func16to32, buf_size>(si, so, (Func16to32) ConvertUTF16toUTF32);
+}
+
+void cvt_16_to_8(const char16* si, string8& so)
+{
+	assert(si);
+	convert_ptr_<char16, char8, Func16to8, buf_size>(
+		si, measure_nulterm(si), so, (Func16to8) ConvertUTF16toUTF8);
+}
+
+void cvt_16_to_16(const char16* si, string16& so)
+{
+	assert(si);
+	so = si;
+}
+
+void cvt_16_to_32(const char16* si, string32& so)
+{
+	assert(si);
+	convert_ptr_<char16, char32, Func16to32, buf_size>(
+		si, measure_nulterm(si), so, (Func16to32) ConvertUTF16toUTF32);
 }
 
 void cvt_32_to_8(const string32& si, string8& so)
@@ -163,27 +224,27 @@ void cvt_32_to_16(const string32& si, string16& so)
 
 void cvt_32_to_32(const string32& si, string32& so)
 {
-	std::copy(si.begin(), si.end(), so.begin());
+	so = si;
+}
+
+void cvt_32_to_8(const char32* si, string8& so)
+{
+	assert(si);
+	convert_ptr_<char32, char8, Func32to8, buf_size>(
+		si, measure_nulterm(si), so, (Func32to8) ConvertUTF32toUTF8);
+}
+
+void cvt_32_to_16(const char32* si, string16& so)
+{
+	assert(si);
+	convert_ptr_<char32, char16, Func32to16, buf_size>(
+		si, measure_nulterm(si), so, (Func32to16) ConvertUTF32toUTF16);
+}
+
+void cvt_32_to_32(const char32* si, string32& so)
+{
+	assert(si);
+	so = si;
 }
 
 } // namespace utf
-
-#include <iostream>
-
-int main()
-{
-	utf::string8  si8 = "abc";
-	utf::string8  so8;
-	utf::string16 so16;
-
-	//utf::cvt_8_to_16(si8, so16);
-	//utf::cvt_16_to_8(so16, so8);
-	//utf::convert(si8, so16);
-	//utf::convert(so16, so8);
-	so16 = utf::to_utf16(si8);
-	so8 = utf::to_utf8(so16);
-
-	std::cout << so8 << std::endl;
-
-	return 0;
-}

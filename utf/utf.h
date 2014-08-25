@@ -34,7 +34,7 @@
 #include <cwchar>
 
 #ifdef UTF_CXX11
-# include <cuchar>
+# include <uchar.h>
 # include <cstdint>
 #else
 # include <stdint.h>
@@ -93,13 +93,25 @@ void cvt_8_to_8(const string8& si, string8& so);
 void cvt_8_to_16(const string8& si, string16& so);
 void cvt_8_to_32(const string8& si, string32& so);
 
+void cvt_8_to_8(const char8* si, string8& so);
+void cvt_8_to_16(const char8* si, string16& so);
+void cvt_8_to_32(const char8* si, string32& so);
+
 void cvt_16_to_8(const string16& si, string8& so);
 void cvt_16_to_16(const string16& si, string16& so);
 void cvt_16_to_32(const string16& si, string32& so);
 
+void cvt_16_to_8(const char16* si, string8& so);
+void cvt_16_to_16(const char16* si, string16& so);
+void cvt_16_to_32(const char16* si, string32& so);
+
 void cvt_32_to_8(const string32& si, string8& so);
 void cvt_32_to_16(const string32& si, string16& so);
 void cvt_32_to_32(const string32& si, string32& so);
+
+void cvt_32_to_8(const char32* si, string8& so);
+void cvt_32_to_16(const char32* si, string16& so);
+void cvt_32_to_32(const char32* si, string32& so);
 
 static inline void convert(const string8& in, string8& out)
 {
