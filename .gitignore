@@ -1,0 +1,5 @@
+*.o
+*.so
+/index.html
+/libutf++*.tar.gz
+/utf/utf.cxx

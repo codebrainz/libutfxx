@@ -1,0 +1,189 @@
+/**
+ * utf.cxx - This file is part of LibUTF++
+ *
+ * Copyright (c) 2014 Matthew Brush <mbrush@codebrainz.ca>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * See also the Unicode Inc. license comments embedded in the "ConvertUTF.h
+ * Header" and "ConvertUTF.c Source File" sections below.
+ */
+
+#include "utf.h"
+
+//////////////////////////////////////////////////////////////////////////////
+// ConvertUTF.h Header                                                      //
+//////////////////////////////////////////////////////////////////////////////
+
+typedef utf::char8 UTF8;
+typedef utf::char16 UTF16;
+typedef utf::char32 UTF32;
+
+/*@@convert_header@@*/
+
+//////////////////////////////////////////////////////////////////////////////
+// ConvertUTF.h Source File                                                 //
+//////////////////////////////////////////////////////////////////////////////
+
+/*@@convert_source@@*/
+
+//////////////////////////////////////////////////////////////////////////////
+// C++ wrapper                                                              //
+//////////////////////////////////////////////////////////////////////////////
+
+#ifndef CONVERT_UTF_H_INCLUDED_
+# error "Missing ConvertUTF.h contents in utf.cxx, did you forget to process utf.cxx.in?"
+#endif
+
+#ifndef CONVERT_UTF_C_INCLUDED_
+# error "Missing ConvertUTF.c contents in utf.cxx, did you forget to process utf.cxx.in?"
+#endif
+
+#include <algorithm>
+#include <cstring>
+
+namespace utf
+{
+
+typedef ConversionResult (*Func8to16)(
+		const UTF8** sourceStart, const UTF8* sourceEnd,
+		UTF16** targetStart, UTF16* targetEnd, ConversionFlags flags);
+
+typedef ConversionResult (*Func16to8)(
+		const UTF16** sourceStart, const UTF16* sourceEnd,
+		UTF8** targetStart, UTF8* targetEnd, ConversionFlags flags);
+
+typedef ConversionResult (*Func8to32)(
+		const UTF8** sourceStart, const UTF8* sourceEnd,
+		UTF32** targetStart, UTF32* targetEnd, ConversionFlags flags);
+
+typedef ConversionResult (*Func32to8)(
+		const UTF32** sourceStart, const UTF32* sourceEnd,
+		UTF8** targetStart, UTF8* targetEnd, ConversionFlags flags);
+
+typedef ConversionResult (*Func16to32)(
+		const UTF16** sourceStart, const UTF16* sourceEnd,
+		UTF32** targetStart, UTF32* targetEnd, ConversionFlags flags);
+
+typedef ConversionResult (*Func32to16)(
+		const UTF32** sourceStart, const UTF32* sourceEnd,
+		UTF16** targetStart, UTF16* targetEnd, ConversionFlags flags);
+
+static const size_t buf_size = 32;
+static ConversionFlags conv_flags = strictConversion;
+
+template< typename InCharT,
+          typename OutCharT,
+          typename FuncT,
+          size_t   BufSize >
+void convert_(const std::basic_string<InCharT>& in, std::basic_string<OutCharT>& out, FuncT cvt_func)
+{
+	OutCharT buf[BufSize] = {0};
+	const InCharT* ss = in.c_str();
+	const InCharT* se = ss + in.size();
+	OutCharT* ts = &buf[0];
+	OutCharT* te = ts + BufSize;
+
+	while (true)
+	{
+		ConversionResult r = cvt_func(&ss, se, &ts, te, conv_flags);
+		size_t len = ts - &buf[0];
+		switch (r)
+		{
+			case conversionOK:
+				out.append(buf, len);
+				return;
+			case sourceExhausted:
+				throw source_exhausted();
+			case targetExhausted:
+				out.append(buf, len);
+				ts = &buf[0];
+				continue;
+			case sourceIllegal:
+				throw illegal_input();
+		}
+	}
+}
+
+void cvt_8_to_8(const string8& si, string8& so)
+{
+	std::copy(si.begin(), si.end(), so.begin());
+}
+
+void cvt_8_to_16(const string8& si, string16& so)
+{
+	convert_<char8, char16, Func8to16, buf_size>(si, so, (Func8to16) ConvertUTF8toUTF16);
+}
+
+void cvt_8_to_32(const string8& si, string32& so)
+{
+	convert_<char8, char32, Func8to32, buf_size>(si, so, (Func8to32) ConvertUTF8toUTF32);
+}
+
+void cvt_16_to_8(const string16& si, string8& so)
+{
+	convert_<char16, char8, Func16to8, buf_size>(si, so, (Func16to8) ConvertUTF16toUTF8);
+}
+
+void cvt_16_to_16(const string16& si, string16& so)
+{
+	std::copy(si.begin(), si.end(), so.begin());
+}
+
+void cvt_16_to_32(const string16& si, string32& so)
+{
+	convert_<char16, char32, Func16to32, buf_size>(si, so, (Func16to32) ConvertUTF16toUTF32);
+}
+
+void cvt_32_to_8(const string32& si, string8& so)
+{
+	convert_<char32, char8, Func32to8, buf_size>(si, so, (Func32to8) ConvertUTF32toUTF8);
+}
+
+void cvt_32_to_16(const string32& si, string16& so)
+{
+	convert_<char32, char16, Func32to16, buf_size>(si, so, (Func32to16) ConvertUTF32toUTF16);
+}
+
+void cvt_32_to_32(const string32& si, string32& so)
+{
+	std::copy(si.begin(), si.end(), so.begin());
+}
+
+} // namespace utf
+
+#include <iostream>
+
+int main()
+{
+	utf::string8  si8 = "abc";
+	utf::string8  so8;
+	utf::string16 so16;
+
+	//utf::cvt_8_to_16(si8, so16);
+	//utf::cvt_16_to_8(so16, so8);
+	//utf::convert(si8, so16);
+	//utf::convert(so16, so8);
+	so16 = utf::to_utf16(si8);
+	so8 = utf::to_utf8(so16);
+
+	std::cout << so8 << std::endl;
+
+	return 0;
+}

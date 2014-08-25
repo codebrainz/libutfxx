@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<html>
+<title>LibUTF++ README</title>
+<xmp theme="simplex" style="display:none;">
+@@readme_contents@@
+</xmp>
+<script src="http://strapdownjs.com/v/0.2/strapdown.js"></script>
+</html>
