@@ -42,14 +42,14 @@ string literals `u8""` (UTF-8), `u""` (UTF-16), and `U""` (UTF-32) as well as
 `char32_t`, with the old `char` type filling the place of the missing
 `char8_t` type.
 
-### Toy Build System
+### Make Build System
 
 To use the simplistic GNU Make build system requires:
 
 - GNU Make
 - A GCC-like C++ compiler
-- sed (to process `utf.cxx.in`)
-- Various other UNIX-like tools (cp, rm, etc)
+- Python 2.7+
+- Various other UNIX-like tools (cp, rm, sed, etc)
 
 __Note:__ it is not recommended to use the GNU Make build system for anything
 more than generating the built files (namely `utf.cxx` and `index.html`). See

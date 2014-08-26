@@ -23,6 +23,8 @@
  *
  * See also the Unicode Inc. license comments embedded in the "ConvertUTF.h
  * Header" and "ConvertUTF.c Source File" sections below.
+ *
+ * This is version @@version@@, generated on @@timestamp@@.
  */
 
 #include "utf.h"

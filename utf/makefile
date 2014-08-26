@@ -1,5 +1,4 @@
-
-SED ?= sed
+PYTHON ?= python
 
 #FIXME: fix -Wnarrowing warnings
 CXXFLAGS_ = $(CXXFLAGS) -fPIC -Wno-narrowing
@@ -14,11 +13,10 @@ utf.o: utf.cxx utf.h
 	$(CXX) -c $(CXXFLAGS_) -o $@ $<
 
 utf.cxx: utf.cxx.in ConvertUTF.c ConvertUTF.h
-	$(SED) -e '/\/\*@@convert_source@@\*\//{r ConvertUTF.c' -e 'd}' $< | \
-		$(SED) -e '/\/\*@@convert_header@@\*\//{r ConvertUTF.h' -e 'd}' > $@
+	$(PYTHON) ../scripts/combine.py $(VERSION)
 
 utfstring-demo: string-demo.cxx libutf++.so
 	$(CXX) $(CXXFLAGS_) -o $@ string-demo.cxx $(LDFLAGS_) -L. -lutf++
 
 clean:
-	$(RM) *.o *.so utf.cxx utfstring-demo
+	$(RM) *.o *.so utfstring-demo
