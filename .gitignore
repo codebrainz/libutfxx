@@ -1,5 +1,6 @@
 *.o
 *.so
+/index.html
 /libutf++*.tar.*
 /doc/index.html
 /utf/utfstring-demo
